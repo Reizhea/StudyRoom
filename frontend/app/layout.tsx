@@ -1,14 +1,35 @@
-import './globals.css';
+"use client";
 
-export const metadata = {
-  title: 'StudyRoom',
-  description: 'Collaborate and Study Effectively!',
-};
+import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+import "./globals.css";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+const theme = extendTheme({
+  components: {
+    Alert: {
+      variants: {
+        info: {
+          container: {
+            bg: "black",
+            color: "white",
+          },
+        },
+      },
+    },
+  },
+});
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ChakraProvider theme={theme} toastOptions={{ defaultOptions: { position: 'top-right'}}}>
+          {children}
+          </ChakraProvider>
+      </body>
     </html>
   );
 }

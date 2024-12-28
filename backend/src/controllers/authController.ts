@@ -46,9 +46,14 @@ export const register = async (req: Request, res: Response) => {
     }
 
     try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+            return res.status(400).json({ error: 'Email is already in use' });
+        }
+
+        const existingUsername = await User.findOne({ username });
+        if (existingUsername) {
+            return res.status(400).json({ error: 'Username is taken' });
         }
 
         const otp = generateOTP();
@@ -212,19 +217,15 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
 export const resetPassword = async (req: Request, res: Response) => {
     const { email, newPassword, isLoggedIn } = req.body;
 
+    if (!email || !newPassword) {
+        return res.status(400).json({ error: 'Email and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
     try {
-        if (isLoggedIn) {
-            const user = await User.findOne({ email });
-            if (!user) {
-                return res.status(404).json({ error: 'User not found' });
-            }
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            user.password = hashedPassword;
-            await user.save();
-
-            return res.status(200).json({ message: 'Password reset successfully.' });
-        }
-
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -234,12 +235,13 @@ export const resetPassword = async (req: Request, res: Response) => {
         user.password = hashedPassword;
         await user.save();
 
-        return res.status(200).json({ message: 'Password reset successfully.' });
+        res.status(200).json({ message: 'Password reset successfully.' });
     } catch (err) {
         console.error('Error resetting password:', err);
         res.status(500).json({ error: 'Password reset failed.' });
     }
 };
+
 
 
 export const login = async (req: Request, res: Response) => {
