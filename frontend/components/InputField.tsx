@@ -10,8 +10,7 @@ interface InputFieldProps {
   disabled?: boolean;
   required?: boolean;
   placeholder?: string;
-  forgotPasswordLink?: boolean;
-  onForgotPasswordClick?: () => void;
+  className?: string;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -22,21 +21,12 @@ const InputField: React.FC<InputFieldProps> = ({
   disabled = false,
   required = false,
   placeholder = "",
-  forgotPasswordLink = false,
-  onForgotPasswordClick,
+  className = "",
 }) => {
   return (
-    <div className="mb-6">
+    <div className={`mb-6 ${className}`.trim()}>
       <div className="flex justify-between items-center mb-2">
         <label className="block text-gray-700 font-medium">{label}</label>
-        {forgotPasswordLink && (
-          <span
-            onClick={onForgotPasswordClick}
-            className="text-sm text-blue-500 hover:underline cursor-pointer"
-          >
-            Forgot?
-          </span>
-        )}
       </div>
       <input
         type={type}

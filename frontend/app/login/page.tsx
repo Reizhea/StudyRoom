@@ -7,6 +7,7 @@ import Button from "../../components/Button";
 import apiClient from "../../utils/apiClients";
 import { useToast } from "@chakra-ui/react";
 import { FaArrowLeft } from "react-icons/fa";
+import PinInputComponent from "@/components/PinInputComponent";
 
 const LoginForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -69,23 +70,14 @@ const LoginForgotPassword = () => {
     }
   };
 
-  const handleVerifyOTP = async () => {
+  const handleVerifyOTP = async (otpValue: string) => {
     setLoading(true);
-
     try {
-      const response = await apiClient.post("/auth/verify-otp", { email, otp });
+      await apiClient.post("/auth/verify-otp", { email, otp: otpValue });
       setStep(3);
-      toast({
-        title: response.data.message || "OTP verified successfully!",
-        status: "success",
-        duration: 5000,
-      });
+      toast({ title: "OTP verified successfully.", status: "success" });
     } catch (error: any) {
-      toast({
-        title: error.response?.data?.error || "Invalid or expired OTP",
-        status: "error",
-        duration: 5000,
-      });
+      toast({ title: error.response?.data?.error || "Invalid OTP.", status: "error" });
     } finally {
       setLoading(false);
     }
@@ -116,7 +108,7 @@ const LoginForgotPassword = () => {
   return (
     <div className="flex flex-col lg:flex-row h-screen">
       {/* Left Panel: Image Section */}
-      <div className="hidden lg:flex w-1/2 bg-purple-100 items-center justify-center">
+      <div className="hidden lg:flex w-1/3 bg-purple-100 items-center justify-center">
         <img
           src="/images/login-page.jpg"
           alt="Login Illustration"
@@ -125,7 +117,7 @@ const LoginForgotPassword = () => {
       </div>
 
       {/* Right Panel: Form Section */}
-      <div className="flex flex-col justify-center items-center w-full lg:w-1/2 bg-white px-8">
+      <div className="flex flex-col justify-center items-center w-full lg:w-2/3 bg-white px-8">
         <button
           onClick={() => router.push("/")}
           className="flex items-center text-black hover:underline absolute top-4 left-4 lg:top-8 lg:left-8"
@@ -134,10 +126,10 @@ const LoginForgotPassword = () => {
           Home
         </button>
 
-        <div className="w-full max-w-md mt-[10rem] lg:mt-0">
+        <div className="w-full max-w-md mt-0 lg:mt-0">
           <h1
-            className={`text-2xl font-bold mb-6 text-black ${
-              step === 0 ? "mt-0" : "mt-4 sm:mt-8"
+            className={`text-2xl font-bold mb-6 text-black text-center ${
+              step === 0 ? "mt-40 lg:mt-10" : "mt-60 lg:mt-10"
             }`}
           >
             {step === 0
@@ -155,8 +147,10 @@ const LoginForgotPassword = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            placeholder="Enter your email"
+            disabled={step === 2 || step === 3}
+            className={step === 2 || step === 3 ? "mb-0" : ""}
           />
+          
 
           {step === 0 && (
             <>
@@ -166,7 +160,6 @@ const LoginForgotPassword = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="Enter your password"
               />
               <Button
                 className="w-full bg-black text-white hover:bg-gray-800"
@@ -178,7 +171,7 @@ const LoginForgotPassword = () => {
 
               <p
                 onClick={() => setStep(1)}
-                className="text-blue-500 hover:underline cursor-pointer mt-4"
+                className="text-gray-500 hover:text-black font-semibold cursor-pointer mt-4"
               >
                 Forgot Password?
               </p>
@@ -202,9 +195,9 @@ const LoginForgotPassword = () => {
                       />
                       Sign in with Google
                     </Button>
-              <p className="text-sm mt-6 text-center">
+              <p className="text-sm mt-2 text-center">
                 Don’t have an account?{" "}
-                <a href="/register" className="text-blue-500 hover:underline">
+                <a href="/register" className="text-gray-500 hover:text-black font-semibold">
                   Sign up
                 </a>
               </p>
@@ -222,7 +215,7 @@ const LoginForgotPassword = () => {
               </Button>
               <button
                 onClick={() => resetForgotPasswordState()}
-                className="flex items-center text-black hover:underline cursor-pointer mt-4"
+                className="flex items-center text-gray-500 hover:text-black font-semibold cursor-pointer mt-4"
               >
                 <FaArrowLeft className="mr-2" /> Back to Login
               </button>
@@ -231,24 +224,34 @@ const LoginForgotPassword = () => {
 
           {step === 2 && (
             <>
-              <InputField
-                type="text"
-                label="OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                required
-                placeholder="Enter the OTP sent to your email"
-              />
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setStep(1)}
+                  className="text-gray-500 hover:text-black font-semibold text-sm mb-4"
+                >
+                  Edit Email
+                </button>
+              </div>
+              <p className="block text-gray-700 font-medium mb-2">OTP</p>
+              <PinInputComponent
+                  value={otp}
+                  onChange={(value) => setOtp(value)}
+                  onComplete={(value) => {
+                    handleVerifyOTP(value);
+                  }}
+                />
               <Button
-                onClick={handleVerifyOTP}
+                onClick={() => {
+                  handleVerifyOTP(otp);
+                }}
                 loading={loading}
-                className="w-full bg-black text-white hover:bg-gray-800"
+                className="w-full bg-black text-white hover:bg-gray-800 mt-6"
               >
                 Verify OTP
               </Button>
               <button
                 onClick={() => resetForgotPasswordState()}
-                className="flex items-center text-black hover:underline cursor-pointer mt-4"
+                className="flex items-center text-gray-500 hover:text-black font-semibold cursor-pointer mt-4"
               >
                 <FaArrowLeft className="mr-2" /> Back to Login
               </button>
@@ -257,13 +260,20 @@ const LoginForgotPassword = () => {
 
           {step === 3 && (
             <>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setStep(1)}
+                  className="text-gray-500 hover:text-black font-semibold text-sm mb-4"
+                >
+                  Edit Email
+                </button>
+              </div>
               <InputField
                 type="password"
                 label="New Password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                placeholder="Enter your new password"
               />
               <Button
                 onClick={handleResetPassword}
@@ -274,7 +284,7 @@ const LoginForgotPassword = () => {
               </Button>
               <button
                 onClick={() => resetForgotPasswordState()}
-                className="flex items-center text-black hover:underline cursor-pointer mt-4"
+                className="flex items-center text-gray-500 hover:text-black font-semibold cursor-pointer mt-4"
               >
                 <FaArrowLeft className="mr-2" /> Back to Login
               </button>
