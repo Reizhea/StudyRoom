@@ -23,6 +23,30 @@ const RegisterPage = () => {
   const router = useRouter();
   const [cooldown, setCooldown] = useState(30);
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) return;
+  
+        const response = await apiClient.get("/auth/check-auth");
+        if (response.data.isAuthenticated) {
+          router.push("/dashboard");
+        }
+      } catch (error: any) {
+        if (error.response?.status === 403) {
+          console.warn("Access token expired. Logging out user.");
+          localStorage.removeItem("authToken");
+          router.push("/login");
+        } else {
+          console.error("Authentication check failed:", error);
+        }
+      }
+    };
+  
+    checkAuth();
+  }, [router]);
+  
   const handleSignUp = async () => {
     setLoading(true);
     try {
@@ -109,7 +133,9 @@ const RegisterPage = () => {
     }
   };
 
-  const handleCompleteRegistration = () => {
+  const handleCompleteRegistration = async () => {
+    const response = await apiClient.post("/auth/finalize-registration", { email });
+    localStorage.setItem("authToken", response.data.accessToken);
     toast({ title: "Redirecting to dashboard...", status: "success" });
     router.push("/dashboard");
   };

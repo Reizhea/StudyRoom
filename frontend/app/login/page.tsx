@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import InputField from "../../components/InputField";
 import Button from "../../components/Button";
@@ -25,12 +25,36 @@ const LoginForgotPassword = () => {
     setStep(0);
   };
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) return;
+  
+        const response = await apiClient.get("/auth/check-auth");
+        if (response.data.isAuthenticated) {
+          router.push("/dashboard");
+        }
+      } catch (error: any) {
+        if (error.response?.status === 403) {
+          console.warn("Access token expired. Logging out user.");
+          localStorage.removeItem("authToken");
+          router.push("/login");
+        } else {
+          console.error("Authentication check failed:", error);
+        }
+      }
+    };
+  
+    checkAuth();
+  }, [router]);
+  
   const handleLogin = async () => {
     setLoading(true);
 
     try {
       const response = await apiClient.post("/auth/login", { email, password });
-      localStorage.setItem("authToken", response.data.token);
+      localStorage.setItem("authToken", response.data.accessToken);
       toast({
         title: "Login successful. Redirecting...",
         status: "success",
@@ -150,7 +174,6 @@ const LoginForgotPassword = () => {
             disabled={step === 2 || step === 3}
             className={step === 2 || step === 3 ? "mb-0" : ""}
           />
-          
 
           {step === 0 && (
             <>
@@ -175,29 +198,34 @@ const LoginForgotPassword = () => {
               >
                 Forgot Password?
               </p>
-                    <div className="flex items-center mt-6 mb-4">
-                      <div className="border-t border-gray-300 w-full"></div>
-                      <span className="text-sm text-gray-500 mx-4">or</span>
-                      <div className="border-t border-gray-300 w-full"></div>
-                    </div>
-                    <Button
-                      className="w-full bg-white text-black border border-gray-300 hover:bg-gray-100 flex justify-center items-center"
-                      onClick={() => toast({
-                        title: "Google Sign-In coming soon!",
-                        status: "info",
-                        duration: 3000,
-                      })}
-                    >
-                      <img
-                        src="/images/google-logo.png"
-                        alt="Google Logo"
-                        className="w-5 h-5 mr-2"
-                      />
-                      Sign in with Google
-                    </Button>
+              <div className="flex items-center mt-6 mb-4">
+                <div className="border-t border-gray-300 w-full"></div>
+                <span className="text-sm text-gray-500 mx-4">or</span>
+                <div className="border-t border-gray-300 w-full"></div>
+              </div>
+              <Button
+                className="w-full bg-white text-black border border-gray-300 hover:bg-gray-100 flex justify-center items-center"
+                onClick={() =>
+                  toast({
+                    title: "Google Sign-In coming soon!",
+                    status: "info",
+                    duration: 3000,
+                  })
+                }
+              >
+                <img
+                  src="/images/google-logo.png"
+                  alt="Google Logo"
+                  className="w-5 h-5 mr-2"
+                />
+                Sign in with Google
+              </Button>
               <p className="text-sm mt-2 text-center">
                 Don’t have an account?{" "}
-                <a href="/register" className="text-gray-500 hover:text-black font-semibold">
+                <a
+                  href="/register"
+                  className="text-gray-500 hover:text-black font-semibold"
+                >
                   Sign up
                 </a>
               </p>
@@ -234,12 +262,12 @@ const LoginForgotPassword = () => {
               </div>
               <p className="block text-gray-700 font-medium mb-2">OTP</p>
               <PinInputComponent
-                  value={otp}
-                  onChange={(value) => setOtp(value)}
-                  onComplete={(value) => {
-                    handleVerifyOTP(value);
-                  }}
-                />
+                value={otp}
+                onChange={(value) => setOtp(value)}
+                onComplete={(value) => {
+                  handleVerifyOTP(value);
+                }}
+              />
               <Button
                 onClick={() => {
                   handleVerifyOTP(otp);

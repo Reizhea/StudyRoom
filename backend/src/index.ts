@@ -3,12 +3,19 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import { MONGO_URI, PORT } from './config';
 import authRoutes from './routes/auth';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
-app.use(cors());
+app.use(
+    cors({
+      origin: 'http://localhost:3000', // Your frontend URL
+      credentials: true, // Allow cookies
+    })
+  );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 mongoose
     .connect(MONGO_URI, { dbName: 'studyroom' })
