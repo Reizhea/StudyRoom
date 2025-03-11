@@ -6,6 +6,8 @@ import { EMAIL_USER, EMAIL_PASS } from "../config";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
 
+//Login/Register
+
 const otpStore = new Map<
   string,
   {
@@ -268,3 +270,50 @@ export const resetPassword = async (req: Request, res: Response) => {
       res.status(500).json({ error: 'Password reset failed.' });
   }
 };
+
+//User Profile
+
+export const getUserProfile = async (req: Request, res: Response) => {
+  const userId = req.authUser?.id;
+
+  try {
+    const user = await User.findById(userId, 'email username profilePicture');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const profilePicture = user.profilePicture || 'https://via.placeholder.com/150';
+    res.status(200).json({
+      email: user.email,
+      username: user.username,
+      profilePicture,
+    });
+  } catch (error) {
+    console.error('Error retrieving user profile:', error);
+    res.status(500).json({ error: 'Failed to retrieve user profile' });
+  }
+};
+
+export const updateUserProfile = async (req: Request, res: Response) => {
+  const userId = req.authUser?.id;
+  const { username, password, profilePicture } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (username) user.username = username;
+    if (password) user.password = await bcrypt.hash(password, 10);
+    if (profilePicture) user.profilePicture = profilePicture;
+
+    await user.save();
+
+    res.status(200).json({ message: "Profile updated successfully." });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ error: "Failed to update profile." });
+  }
+};
+

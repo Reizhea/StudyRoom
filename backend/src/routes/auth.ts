@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, verifyOTP, login, requestPasswordReset, resetPassword, resendOTP, finalizeRegistration} from '../controllers/authController';
+import { register, verifyOTP, login, requestPasswordReset, resetPassword, resendOTP, finalizeRegistration, getUserProfile, updateUserProfile} from '../controllers/authController';
 import { authenticateToken } from '../middlewares/authenticateToken';
 
 const router = express.Router();
@@ -42,4 +42,12 @@ router.get("/check-auth", authenticateToken, (req, res) => {
     }
 });
 
+router.get("/profile", authenticateToken, async (req, res) => {
+    await getUserProfile(req, res);
+  });
+  
+  router.put("/profile", authenticateToken, async (req, res) => {
+    await updateUserProfile(req, res);
+  });
+  
 export default router;

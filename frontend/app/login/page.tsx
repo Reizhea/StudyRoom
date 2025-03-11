@@ -58,9 +58,11 @@ const LoginForgotPassword = () => {
       toast({
         title: "Login successful. Redirecting...",
         status: "success",
-        duration: 5000,
+        duration: 3000,
       });
-      router.push("/dashboard");
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 3000);
     } catch (error: any) {
       toast({
         title: error.response?.data?.error || "Something went wrong",
